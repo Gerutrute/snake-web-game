@@ -7,6 +7,8 @@ let direction = null;
 let food = spawnFood();
 let score = 0;
 let gameInterval;
+let isPaused = false;
+let isGameOver = false;
 
 function draw() {
     ctx.clearRect(0, 0, canvasSize, canvasSize);
@@ -22,9 +24,18 @@ function draw() {
     ctx.fillStyle = '#fff';
     ctx.font = '20px Arial';
     ctx.fillText('Score: ' + score, 10, 390);
+    // Draw paused
+    if (isPaused && !isGameOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.fillStyle = '#fff';
+        ctx.font = '40px Arial';
+        ctx.fillText('PAUSED', 120, 200);
+    }
 }
 
 function update() {
+    if (isPaused || isGameOver) return;
     let head = { x: snake[0].x, y: snake[0].y };
     if (direction === 'LEFT') head.x -= box;
     if (direction === 'UP') head.y -= box;
@@ -68,8 +79,16 @@ function spawnFood() {
 
 function endGame() {
     clearInterval(gameInterval);
-    alert('Game Over! Your score: ' + score);
-    document.location.reload();
+    isGameOver = true;
+    document.getElementById('restartBtn').style.display = 'inline-block';
+    draw();
+    setTimeout(() => {
+        ctx.fillStyle = '#fff';
+        ctx.font = '30px Arial';
+        ctx.fillText('Game Over!', 110, 180);
+        ctx.font = '20px Arial';
+        ctx.fillText('Score: ' + score, 150, 220);
+    }, 30);
 }
 
 document.addEventListener('keydown', e => {
@@ -77,7 +96,29 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
     if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
     if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+    if (e.code === 'Space') {
+        if (!isGameOver) {
+            isPaused = !isPaused;
+            draw();
+        }
+    }
 });
+
+document.getElementById('restartBtn').onclick = function() {
+    restartGame();
+};
+
+function restartGame() {
+    snake = [{ x: 9 * box, y: 10 * box }];
+    direction = 'RIGHT';
+    food = spawnFood();
+    score = 0;
+    isPaused = false;
+    isGameOver = false;
+    document.getElementById('restartBtn').style.display = 'none';
+    clearInterval(gameInterval);
+    gameInterval = setInterval(gameLoop, 100);
+}
 
 function gameLoop() {
     update();
